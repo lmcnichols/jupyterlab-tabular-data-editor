@@ -170,14 +170,12 @@ export default class EditableDSVModel extends MutableDataModel {
     let shift = 0;
     for (let row = 0; row <= model.rowCount('body'); row++) {
       index = model.getOffsetIndex(row, colNumber) + shift;
-      console.log(row, colNumber);
       model.rawData =
         model.rawData.slice(0, index) +
         model.delimiter +
         model.rawData.slice(index);
       shift += model.delimiter.length;
     }
-    console.log(model.rawData);
     model.parseAsync();
     this.emitChanged({
       type: 'columns-inserted',
