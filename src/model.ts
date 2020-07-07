@@ -52,7 +52,7 @@ export default class EditableDSVModel extends MutableDataModel {
         } else {
           this._setField(row + 1, column, value);
         }
-        console.log('setting field in body');
+        console.log('setting field in body3');
         break;
       default:
         throw 'unreachable';
