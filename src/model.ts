@@ -1,11 +1,16 @@
 import { MutableDataModel, DataModel } from '@lumino/datagrid';
 import { DSVModel } from 'tde-csvviewer';
 import { Signal } from '@lumino/signaling';
+import { Queue } from 'queue-typescript';
 
 export default class EditableDSVModel extends MutableDataModel {
+  private _dataQueue: Queue<string>;
+  private _operationQueue: Queue<DataModel.ChangedArgs>;
   constructor(options: DSVModel.IOptions) {
     super();
     this._dsvModel = new DSVModel(options);
+    this._dataQueue = new Queue();
+    this._operationQueue = new Queue();
   }
 
   get dsvModel(): DSVModel {
