@@ -41,6 +41,7 @@ export default class EditableDSVModel extends MutableDataModel {
     return this._dsvModel.data(region, row, column);
   }
 
+  // calling setData with value = null performs an inversion if the last operation was a setData operation.
   setData(
     region: DataModel.CellRegion,
     row: number,
