@@ -308,7 +308,7 @@ export class EditableCSVViewer extends Widget {
         break;
       }
       case 'add-column': {
-        this.dataModel.addColumn(this._column);
+        this.dataModel.addColumn(this._row, this._column);
         break;
       }
       case 'remove-row': {
