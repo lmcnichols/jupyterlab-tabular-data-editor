@@ -1,7 +1,7 @@
 import { MutableDataModel, DataModel } from '@lumino/datagrid';
 import { DSVModel } from 'tde-csvviewer';
 import { Signal } from '@lumino/signaling';
-// import { numberToCharacter } from './_helper';
+import { numberToCharacter } from './_helper';
 // import { ClipBoardHandler } from './clipboard';
 
 export default class EditableDSVModel extends MutableDataModel {
@@ -119,10 +119,24 @@ export default class EditableDSVModel extends MutableDataModel {
     );
   }
 
-  addColumn(startRow: number, column: number, number = 1): void {
+  addColumn(column: number, numAdded = 1): void {
     const model = this.dsvModel;
-    // const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    // let row: number;
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const prevNumCol = this.columnCount('body');
+    const nextLetter = numberToCharacter(alphabet, prevNumCol + 1);
+
+    let headerLength = this.colHeaderLength;
+
+    model.rawData =
+      model.rawData.slice(0, headerLength - 1) +
+      model.delimiter +
+      nextLetter +
+      model.rawData.slice(headerLength - 1);
+
+    headerLength += model.delimiter.length + nextLetter.length;
+    // need to push the letter to the header here so that it updates
+    model.header.push(nextLetter);
+
     const change: DataModel.ChangedArgs = {
       type: 'columns-inserted',
       region: 'body',
@@ -131,77 +145,40 @@ export default class EditableDSVModel extends MutableDataModel {
     };
     model.parseAsync();
     this.emitChanged(change);
+    this._onChangeSignal.emit(this._dsvModel.rawData.slice(headerLength));
 
-    // // Add delimeter to the top so that the datagrid interprets subsequent changes as a new column
-    // // this.insertAt(model.delimiter, model, { row: 1, column: column });
+    // add the body data asynchronously
+    const addBatch = (batchSize: number, start: number) => {
+      let row = start;
+      const end = Math.min(model.rowCount('body'), start + batchSize - 1);
+      for (row = end; row >= start; row--) {
+        console.log('row is', row);
+        this.insertAt(model.delimiter, model, { row: row, column: column + 1 });
+      }
+      const change: DataModel.ChangedArgs = {
+        type: 'cells-changed',
+        region: 'body',
+        column: column,
+        row: row,
+        rowSpan: end - start + 1,
+        columnSpan: 1
+      };
+      model.parseAsync();
+      this.emitChanged(change);
+      this._onChangeSignal.emit(this._dsvModel.rawData.slice(headerLength));
 
-    // // define a function to parse a bach
-    // const addBatch = (batchSize: number, start: number) => {
-    //   const end = Math.min(row + batchSize, model.rowCount('body'));
-    //   for (row = end; row >= start; row--) {
-    //     this.insertAt(model.delimiter, model, { row: row, column: column + 1 });
-    //   };
-    //   return end;
-    // };
-    // let change: DataModel.ChangedArgs = {
-    //   type: 'columns-inserted',
-    //   region: 'body',
-    //   index: column,
-    //   span: 1
-    // };
-    // model.parseAsync();
-    // this.emitChanged(change);
+      return end;
+    };
 
-    // // operate on initial 100 rows
-    // let addedUpTo = addBatch(100, 0);
-
-    // if (addedUpTo === model.rowCount('body')) {
-    //   return
-    // }
-
-    // // do the reset of the baches in delays
-    // const delayBach = () => {
-    //   addedUpTo = addBatch(100, addedUpTo + 1);
-    //   change = {
-    //     type: 'cells-changed',
-    //     region: 'body',
-    //     column: column,
-    //     row: addedUpTo + 1,
-    //     rowSpan: 100,
-    //     columnSpan: 1,
-    //   };
-    //   model.parseAsync();
-    //   this.emitChanged(change);
-    //   if (addedUpTo !== model.rowCount('body')) {
-    //     window.setTimeout(delayBach, 30);
-    //   }
-
-    // }
-    // window.setTimeout(delayBach, 30);
-
-    // const prevNumCol = this.columnCount('body');
-    // const nextLetter = numberToCharacter(alphabet, prevNumCol + 1);
-    // model.rawData =
-    //   model.rawData.slice(0, this._colHeaderLength - 1) +
-    //   model.delimiter +
-    //   nextLetter +
-    //   model.rawData.slice(this._colHeaderLength - 1);
-
-    // this.colHeaderLength += model.delimiter.length + nextLetter.length;
-    // // need to push the letter to the header here so that it updates
-    // model.header.push(nextLetter);
-
-    // change = {
-    //   type: 'columns-inserted',
-    //   region: 'body',
-    //   index: column,
-    //   span: 1
-    // };
-    // model.parseAsync();
-    // this.emitChanged(change);
-    // this._onChangeSignal.emit(
-    //   this._dsvModel.rawData.slice(this._colHeaderLength)
-    // );
+    let parsedUpTo = 0;
+    const addAsync = () => {
+      parsedUpTo = addBatch(100, parsedUpTo + 1);
+      if (parsedUpTo === model.rowCount('body')) {
+        return;
+      }
+      window.setTimeout(addAsync, 1000);
+    };
+    window.setTimeout(addAsync, 1000);
   }
 
   removeRow(row: number): void {
