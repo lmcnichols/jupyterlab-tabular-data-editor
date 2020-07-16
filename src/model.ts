@@ -13,17 +13,6 @@ export default class EditableDSVModel extends MutableDataModel {
     this.dsvModel.changed.connect(this._passMessage, this);
   }
 
-  get clipBoard(): Array<any> {
-    return this._clipBoard;
-  }
-
-  set clipBoard(values: Array<any>) {
-    this._clipBoard = values;
-
-    // propagate changes in the dsvModel up to the grid
-    this.dsvModel.changed.connect(this._passMessage, this);
-  }
-
   get dsvModel(): DSVModel {
     return this._dsvModel;
   }
@@ -46,7 +35,9 @@ export default class EditableDSVModel extends MutableDataModel {
     emitter: DSVModel,
     message: DataModel.ChangedArgs
   ): void {
+    if (message.type === "rows-inserted") {
     this.emitChanged(message);
+    }
   }
 
   rowCount(region: DataModel.RowRegion): number {
@@ -152,21 +143,15 @@ export default class EditableDSVModel extends MutableDataModel {
       let row = start;
       const end = Math.min(model.rowCount('body'), start + batchSize - 1);
       for (row = end; row >= start; row--) {
-        console.log('row is', row);
         this.insertAt(model.delimiter, model, { row: row, column: column + 1 });
       }
       const change: DataModel.ChangedArgs = {
-        type: 'cells-changed',
-        region: 'body',
-        column: column,
-        row: row,
-        rowSpan: end - start + 1,
-        columnSpan: 1
+        type: "model-reset"
       };
       model.parseAsync();
       this.emitChanged(change);
       this._onChangeSignal.emit(this._dsvModel.rawData.slice(headerLength));
-
+      console.log('end is', end);
       return end;
     };
 
@@ -176,7 +161,7 @@ export default class EditableDSVModel extends MutableDataModel {
       if (parsedUpTo === model.rowCount('body')) {
         return;
       }
-      window.setTimeout(addAsync, 1000);
+      window.setTimeout(addAsync, 3000);
     };
     window.setTimeout(addAsync, 1000);
   }
@@ -463,7 +448,6 @@ export default class EditableDSVModel extends MutableDataModel {
     this
   );
   private _block = true;
-  private _clipBoard: Array<any>;
   // private _cellSelection: ICellSelection | null;
 }
 

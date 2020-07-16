@@ -15,7 +15,7 @@ import {
   // ICommandPalette
   // InputDialog
 } from '@jupyterlab/apputils';
-import { IDocumentWidget } from '@jupyterlab/docregistry';
+import { IDocumentWidget, DocumentRegistry } from '@jupyterlab/docregistry';
 // import { ISearchProviderRegistry } from '@jupyterlab/documentsearch';
 import { /*IEditMenu,*/ IMainMenu } from '@jupyterlab/mainmenu';
 import { DataGrid } from '@lumino/datagrid';
@@ -49,7 +49,7 @@ function activateCsv(
     defaultFor: ['csv'],
     readOnly: true
   });
-  const tracker = new WidgetTracker<IDocumentWidget<EditableCSVViewer>>({
+  const tracker = new WidgetTracker<IDocumentWidget<EditableCSVViewer, DocumentRegistry.IModel>>({
     namespace: 'editablecsvviewer'
   });
 
