@@ -1,13 +1,11 @@
 import { DSVModel } from 'tde-csvviewer';
 import { MutableDataModel, DataModel, SelectionModel } from 'tde-datagrid';
 import { Litestore } from './litestore';
-// import { toArray, range } from '@lumino/algorithm';
 import { DSVEditor } from './widget';
 import { Signal } from '@lumino/signaling';
 import { ListField, MapField, RegisterField } from 'tde-datastore';
 import { toArray, range } from '@lumino/algorithm';
 import { inferType } from 'vega';
-// import { SplitPanel } from '@lumino/widgets';
 
 export class EditorModel extends MutableDataModel {
   constructor(options: DSVModel.IOptions) {
